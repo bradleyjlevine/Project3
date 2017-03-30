@@ -1,9 +1,30 @@
 ﻿using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
+using Primitives;
+
 
 namespace Project3
 {
+    #region Structs
+    struct CubeData
+    {
+        public Vector3 position;
+        public float scale;
+        public float xScale;
+        public float yScale;
+        public float zScale;
+        public Color color;
+        public Vector3 velocity;
+    }
+
+    struct SphereData
+    {
+        public Vector3 position;
+        public Color color;
+        public Vector3 velocity;
+    }
+    #endregion
     /// <summary>
     /// This is the main type for your game.
     /// </summary>
@@ -11,6 +32,16 @@ namespace Project3
     {
         GraphicsDeviceManager graphics;
         SpriteBatch spriteBatch;
+        Cube cube;
+        CubeData[] cubeData;
+        SpherePrimitive sphere;
+        SphereData[] sphereData;
+
+        Matrix world;
+        Matrix view;
+        Matrix projection;
+        Vector3 cameraPosition = new Vector3(0, 0, 50f);
+        float cameraSpeed = 5, pitch = 0, yaw = 0;
 
         public Game1()
         {
@@ -26,7 +57,14 @@ namespace Project3
         /// </summary>
         protected override void Initialize()
         {
-            // TODO: Add your initialization logic here
+            cube = new Cube();
+            sphere = new SpherePrimitive(GraphicsDevice, 10f, 20);
+            cubeData = new CubeData[3];
+            sphereData = new SphereData[1];
+
+            world = Matrix.Identity;
+            view = Matrix.CreateLookAt(cameraPosition, new Vector3(0, 0, 0), Vector3.Up);
+            projection = Matrix.CreatePerspectiveFieldOfView(MathHelper.ToRadians(45f), GraphicsDevice.DisplayMode.AspectRatio, 1f, 1000f);
 
             base.Initialize();
         }
@@ -62,7 +100,43 @@ namespace Project3
             if (GamePad.GetState(PlayerIndex.One).Buttons.Back == ButtonState.Pressed || Keyboard.GetState().IsKeyDown(Keys.Escape))
                 Exit();
 
-            // TODO: Add your update logic here
+            //gets the state of the keyboards
+            KeyboardState state = Keyboard.GetState();
+
+            #region Rotation and Translations of View
+            Matrix rotation;
+
+            if (state.IsKeyDown(Keys.Up))
+                pitch += 0.05f;
+            if (state.IsKeyDown(Keys.Down))
+                pitch -= 0.05f;
+            if (state.IsKeyDown(Keys.Left))
+                yaw += 0.05f;
+            if (state.IsKeyDown(Keys.Right))
+                yaw -= 0.05f;
+
+            rotation = Matrix.CreateFromYawPitchRoll(yaw, pitch, 0f);
+
+            if (state.IsKeyDown(Keys.A))
+            {
+                cameraPosition += rotation.Left * cameraSpeed * gameTime.ElapsedGameTime.Milliseconds / 1000f;
+            }
+            else if (state.IsKeyDown(Keys.S))
+            {
+                cameraPosition += rotation.Backward * cameraSpeed * gameTime.ElapsedGameTime.Milliseconds / 1000f;
+            }
+            else if (state.IsKeyDown(Keys.D))
+            {
+                cameraPosition += rotation.Right * cameraSpeed * gameTime.ElapsedGameTime.Milliseconds / 1000f;
+            }
+            else if (state.IsKeyDown(Keys.W))
+            {
+                cameraPosition += rotation.Forward * cameraSpeed * gameTime.ElapsedGameTime.Milliseconds / 1000f;
+            }
+
+            view = Matrix.CreateLookAt(cameraPosition, cameraPosition + rotation.Forward, rotation.Up);
+
+            #endregion
 
             base.Update(gameTime);
         }
