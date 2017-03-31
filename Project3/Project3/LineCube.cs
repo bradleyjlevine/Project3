@@ -23,6 +23,7 @@ namespace Project3
 
         public LineCube()
         {
+            vertices = new VertexPositionColor[NUM_VERTICES];
 
             vertices[0] = new VertexPositionColor(topLeftFront, Color.White);
             vertices[1] = new VertexPositionColor(topLeftBack, Color.Red);
