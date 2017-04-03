@@ -1,6 +1,7 @@
 ﻿using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
+using System;
 using Primitives;
 
 
@@ -33,14 +34,16 @@ namespace Project3
         GraphicsDeviceManager graphics;
         SpriteBatch spriteBatch;
         Cube cube;
+        LineCube field;
         CubeData[] cubeData;
         SpherePrimitive sphere;
         SphereData[] sphereData;
+        BasicEffect effect;
 
         Matrix world;
         Matrix view;
         Matrix projection;
-        Vector3 cameraPosition = new Vector3(0, 0, 50f);
+        Vector3 cameraPosition = new Vector3(0, 0, 125f);
         float cameraSpeed = 5, pitch = 0, yaw = 0;
 
         public Game1()
@@ -59,12 +62,19 @@ namespace Project3
         {
             cube = new Cube();
             sphere = new SpherePrimitive(GraphicsDevice, 10f, 20);
+            effect = new BasicEffect(GraphicsDevice);
+            field = new LineCube();
             cubeData = new CubeData[3];
             sphereData = new SphereData[1];
 
             world = Matrix.Identity;
             view = Matrix.CreateLookAt(cameraPosition, new Vector3(0, 0, 0), Vector3.Up);
             projection = Matrix.CreatePerspectiveFieldOfView(MathHelper.ToRadians(45f), GraphicsDevice.DisplayMode.AspectRatio, 1f, 1000f);
+
+            cubeData[0].xScale = 25;
+            cubeData[0].yScale = 25;
+            cubeData[0].zScale = 50;
+            cubeData[0].position = Vector3.Zero;
 
             base.Initialize();
         }
@@ -104,37 +114,42 @@ namespace Project3
             KeyboardState state = Keyboard.GetState();
 
             #region Rotation and Translations of View
-            Matrix rotation;
+            //Matrix rotation;
 
-            if (state.IsKeyDown(Keys.Up))
+            //if (state.IsKeyDown(Keys.Up))
+            //    pitch += 0.05f;
+            //if (state.IsKeyDown(Keys.Down))
+            //    pitch -= 0.05f;
+            //if (state.IsKeyDown(Keys.Left))
+            //    yaw += 0.05f;
+            //if (state.IsKeyDown(Keys.Right))
+            //    yaw -= 0.05f;
+
+            //rotation = Matrix.CreateFromYawPitchRoll(yaw, pitch, 0f);
+
+            if (state.IsKeyDown(Keys.A) && pitch < MathHelper.Pi)
+            {
                 pitch += 0.05f;
-            if (state.IsKeyDown(Keys.Down))
-                pitch -= 0.05f;
-            if (state.IsKeyDown(Keys.Left))
-                yaw += 0.05f;
-            if (state.IsKeyDown(Keys.Right))
+            }
+
+            if (state.IsKeyDown(Keys.S) && yaw > -MathHelper.PiOver2)
+            {
                 yaw -= 0.05f;
-
-            rotation = Matrix.CreateFromYawPitchRoll(yaw, pitch, 0f);
-
-            if (state.IsKeyDown(Keys.A))
-            {
-                cameraPosition += rotation.Left * cameraSpeed * gameTime.ElapsedGameTime.Milliseconds / 1000f;
-            }
-            else if (state.IsKeyDown(Keys.S))
-            {
-                cameraPosition += rotation.Backward * cameraSpeed * gameTime.ElapsedGameTime.Milliseconds / 1000f;
-            }
-            else if (state.IsKeyDown(Keys.D))
-            {
-                cameraPosition += rotation.Right * cameraSpeed * gameTime.ElapsedGameTime.Milliseconds / 1000f;
-            }
-            else if (state.IsKeyDown(Keys.W))
-            {
-                cameraPosition += rotation.Forward * cameraSpeed * gameTime.ElapsedGameTime.Milliseconds / 1000f;
             }
 
-            view = Matrix.CreateLookAt(cameraPosition, cameraPosition + rotation.Forward, rotation.Up);
+            if (state.IsKeyDown(Keys.D) && pitch > 0)
+            {
+                pitch -= 0.05f;
+            }
+
+            if (state.IsKeyDown(Keys.W) && yaw < MathHelper.PiOver2)
+            {
+                yaw += 0.05f;
+            }
+
+            cameraPosition = new Vector3((float)Math.Cos(pitch) * 50, (float)Math.Sin(yaw) * 50, 125);
+
+            view = Matrix.CreateLookAt(cameraPosition, Vector3.Zero, Vector3.Up);
 
             #endregion
 
@@ -147,9 +162,21 @@ namespace Project3
         /// <param name="gameTime">Provides a snapshot of timing values.</param>
         protected override void Draw(GameTime gameTime)
         {
-            GraphicsDevice.Clear(Color.CornflowerBlue);
+            GraphicsDevice.Clear(Color.Black);
 
-            // TODO: Add your drawing code here
+            effect.VertexColorEnabled = true;
+
+            foreach (EffectPass pass in effect.CurrentTechnique.Passes)
+            {
+                pass.Apply();
+
+                effect.World = world * Matrix.CreateScale(cubeData[0].xScale, cubeData[0].yScale, cubeData[0].zScale) * Matrix.CreateTranslation(cubeData[0].position);
+                effect.View = view;
+                effect.Projection = projection;
+
+                field.Render(GraphicsDevice);
+            }
+
 
             base.Draw(gameTime);
         }

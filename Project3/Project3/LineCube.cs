@@ -5,7 +5,7 @@ namespace Project3
 {
     class LineCube
     {
-        static VertexPositionColor[] vertices;
+        static VertexPositionColorTexture[] vertices;
 
         //Calculate the position of the vertices on the top face
         static Vector3 topLeftFront = new Vector3(-1.0f, 1.0f, -1.0f);
@@ -24,53 +24,56 @@ namespace Project3
         public LineCube()
         {
 
-            vertices[0] = new VertexPositionColor(topLeftFront, Color.White);
-            vertices[1] = new VertexPositionColor(topLeftBack, Color.Red);
+            vertices = new VertexPositionColorTexture[NUM_VERTICES];
 
-            vertices[2] = new VertexPositionColor(topRightFront, Color.White);
-            vertices[3] = new VertexPositionColor(topRightBack, Color.Red);
+            vertices[0] = new VertexPositionColorTexture(topLeftFront, Color.White, Vector2.Zero);
+            vertices[1] = new VertexPositionColorTexture(topLeftBack, Color.Red, Vector2.Zero);
 
-            vertices[4] = new VertexPositionColor(btmLeftFront, Color.White);
-            vertices[5] = new VertexPositionColor(btmLeftBack, Color.Red);
+            vertices[2] = new VertexPositionColorTexture(topRightFront, Color.White, Vector2.Zero);
+            vertices[3] = new VertexPositionColorTexture(topRightBack, Color.Red, Vector2.Zero);
 
-            vertices[6] = new VertexPositionColor(btmRightFront, Color.White);
-            vertices[7] = new VertexPositionColor(btmRightBack, Color.Red);
+            vertices[4] = new VertexPositionColorTexture(btmLeftFront, Color.White, Vector2.Zero);
+            vertices[5] = new VertexPositionColorTexture(btmLeftBack, Color.Red, Vector2.Zero);
 
-            vertices[8] = new VertexPositionColor(topLeftFront, Color.White);
-            vertices[9] = new VertexPositionColor(topRightFront, Color.Red);
+            vertices[6] = new VertexPositionColorTexture(btmRightFront, Color.White, Vector2.Zero);
+            vertices[7] = new VertexPositionColorTexture(btmRightBack, Color.Red, Vector2.Zero);
 
-            vertices[10] = new VertexPositionColor(btmLeftFront, Color.White);
-            vertices[11] = new VertexPositionColor(btmRightFront, Color.Red);
+            vertices[8] = new VertexPositionColorTexture(topLeftFront, Color.White, Vector2.Zero);
+            vertices[9] = new VertexPositionColorTexture(topRightFront, Color.Red, Vector2.Zero);
 
-            vertices[12] = new VertexPositionColor(topLeftFront, Color.White);
-            vertices[13] = new VertexPositionColor(btmLeftFront, Color.Red);
+            vertices[10] = new VertexPositionColorTexture(btmLeftFront, Color.White, Vector2.Zero);
+            vertices[11] = new VertexPositionColorTexture(btmRightFront, Color.Red, Vector2.Zero);
 
-            vertices[14] = new VertexPositionColor(topRightFront, Color.White);
-            vertices[15] = new VertexPositionColor(btmRightFront, Color.Red);
+            vertices[12] = new VertexPositionColorTexture(topLeftFront, Color.White, Vector2.Zero);
+            vertices[13] = new VertexPositionColorTexture(btmLeftFront, Color.Red, Vector2.Zero);
 
-            vertices[16] = new VertexPositionColor(topLeftBack, Color.White);
-            vertices[17] = new VertexPositionColor(topRightBack, Color.Red);
+            vertices[14] = new VertexPositionColorTexture(topRightFront, Color.White, Vector2.Zero);
+            vertices[15] = new VertexPositionColorTexture(btmRightFront, Color.Red, Vector2.Zero);
 
-            vertices[18] = new VertexPositionColor(btmLeftBack, Color.White);
-            vertices[19] = new VertexPositionColor(btmRightBack, Color.Red);
+            vertices[16] = new VertexPositionColorTexture(topLeftBack, Color.White, Vector2.Zero);
+            vertices[17] = new VertexPositionColorTexture(topRightBack, Color.Red, Vector2.Zero);
 
-            vertices[20] = new VertexPositionColor(topLeftBack, Color.White);
-            vertices[21] = new VertexPositionColor(btmLeftBack, Color.Red);
+            vertices[18] = new VertexPositionColorTexture(btmLeftBack, Color.White, Vector2.Zero);
+            vertices[19] = new VertexPositionColorTexture(btmRightBack, Color.Red, Vector2.Zero);
 
-            vertices[22] = new VertexPositionColor(topRightBack, Color.White);
-            vertices[23] = new VertexPositionColor(btmRightBack, Color.Red);
+            vertices[20] = new VertexPositionColorTexture(topLeftBack, Color.White, Vector2.Zero);
+            vertices[21] = new VertexPositionColorTexture(btmLeftBack, Color.Red, Vector2.Zero);
+
+            vertices[22] = new VertexPositionColorTexture(topRightBack, Color.White, Vector2.Zero);
+            vertices[23] = new VertexPositionColorTexture(btmRightBack, Color.Red, Vector2.Zero);
         }
 
         public void Render(GraphicsDevice device)
         {
 
-            VertexBuffer buffer = new VertexBuffer(device, typeof(VertexPositionColor), NUM_VERTICES, BufferUsage.WriteOnly);
+            VertexBuffer buffer = new VertexBuffer(device, typeof(VertexPositionColorTexture), NUM_VERTICES, BufferUsage.WriteOnly);
 
-            buffer.SetData<VertexPositionColor>(vertices);
+            buffer.SetData<VertexPositionColorTexture>(vertices);
 
             device.SetVertexBuffer(buffer);
 
             device.DrawPrimitives(PrimitiveType.LineList, 0, NUM_VERTICES / 2);
+
         }
     }
 }
