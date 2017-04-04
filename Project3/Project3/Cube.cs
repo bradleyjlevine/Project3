@@ -124,6 +124,8 @@ namespace Project3
             device.DrawPrimitives(PrimitiveType.TriangleList, 0, 12);
         }
 
+
+
         /// <summary>
         /// creates string for cube object
         /// </summary>
