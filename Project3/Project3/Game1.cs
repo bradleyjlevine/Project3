@@ -114,14 +114,14 @@ namespace Project3
             cubeData[1].xScale = 1;
             cubeData[1].yScale = 1;
             cubeData[1].zScale = 0.2f;
-            cubeData[1].position = new Vector3(0, 0, 20);
+            cubeData[1].position = new Vector3(0, 0, 20f);
             cubeData[1].color = new Color(NextFloat(0.5f, 1), 0, NextFloat(0.5f, 1));
 
             //paddles info player 2
             cubeData[2].xScale = 1;
             cubeData[2].yScale = 1;
             cubeData[2].zScale = 0.2f;
-            cubeData[2].position = new Vector3(0, 0, -20);
+            cubeData[2].position = new Vector3(0, 0, -20f);
             cubeData[2].color = new Color(NextFloat(0.5f, 1), NextFloat(0.5f, 1), 0);
         }
 
@@ -168,8 +168,8 @@ namespace Project3
                 //creates the bounding sphere around the ball
                 ballBoundingSphere = new BoundingSphere(sphereData[i].position, 1f);
                 playerPaddle1 = new BoundingBox(new Vector3(-cubeData[1].xScale + cubeData[1].position.X, -cubeData[1].yScale + cubeData[1].position.Y, -cubeData[1].zScale + cubeData[1].position.Z), new Vector3(cubeData[1].xScale + cubeData[1].position.X, cubeData[1].yScale + cubeData[1].position.Y, cubeData[1].zScale + cubeData[1].position.Z));
-                
-                if(ballBoundingSphere.Intersects(playerPaddle1))
+
+                if (ballBoundingSphere.Intersects(playerPaddle1))
                 {
                     deltaX = sphereData[i].position.X - cubeData[1].position.X;
                     deltaY = sphereData[i].position.Y - cubeData[1].position.Y;
@@ -182,6 +182,7 @@ namespace Project3
                     sphereData[i].velocity.Normalize();
 
                     sphereData[i].velocity *= ballSpeed;
+                    sphereData[i].velocity.Z = ballSpeed;
 
                     Console.WriteLine(sphereData[i].velocity);
                 }
@@ -201,7 +202,7 @@ namespace Project3
             #region Rotation and Translations of View
 
             //paddle1 movement
-            if (state.IsKeyDown(Keys.Left) && state.IsKeyDown(Keys.Up) && playerPaddle1.Intersects(new Plane(new Vector3(0, 1, 0), 10)) != PlaneIntersectionType.Intersecting)
+            if (state.IsKeyDown(Keys.Left) && state.IsKeyDown(Keys.Up))
             {
                 cubeData[1].position.Y += paddleSpeed1 * (float)(Math.Sqrt(2) / 2) * gameTime.ElapsedGameTime.Milliseconds / 1000f;
                 cubeData[1].position.X -= paddleSpeed1 * (float)(Math.Sqrt(2) / 2) * gameTime.ElapsedGameTime.Milliseconds / 1000f;
