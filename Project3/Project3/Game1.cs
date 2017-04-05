@@ -52,7 +52,7 @@ namespace Project3
         Matrix view;
         Matrix projection;
         Vector3 cameraPosition = new Vector3(0, 0, 50f);
-        float ballSpeed = 10f, pitch = MathHelper.PiOver2, yaw = 0;
+        float ballSpeed = 10f, paddleSpeed1 = 10f, pitch = MathHelper.PiOver2, yaw = 0;
         #endregion
 
         public Game1()
@@ -89,7 +89,8 @@ namespace Project3
             sphereData[0].color = new Color(NextFloat(0.5f, 1), NextFloat(0, 1), NextFloat(0, 1));
 
             //creates the bounding box
-            fieldBoundingBox = new BoundingBox(new Vector3(-cubeData[0].xScale, -cubeData[0].yScale, -cubeData[0].zScale), new Vector3(cubeData[0].xScale, cubeData[0].yScale, cubeData[0].zScale));
+            fieldBoundingBox = new BoundingBox(new Vector3(-cubeData[0].xScale + cubeData[0].position.X, -cubeData[0].yScale + cubeData[0].position.Y, -cubeData[0].zScale + cubeData[0].position.Z), new Vector3(cubeData[0].xScale + cubeData[0].position.X, cubeData[0].yScale + cubeData[0].position.Y, cubeData[0].zScale + cubeData[0].position.Z));
+            playerPaddle2 = new BoundingBox(new Vector3(-cubeData[2].xScale + cubeData[2].position.X, -cubeData[2].yScale + cubeData[2].position.Y, -cubeData[2].zScale + cubeData[2].position.X), new Vector3(cubeData[2].xScale + cubeData[2].position.X, cubeData[2].yScale + cubeData[2].position.Y, cubeData[2].zScale + cubeData[2].position.Z));
 
             world = Matrix.Identity;
             view = Matrix.CreateLookAt(cameraPosition, new Vector3(0, 0, 0), Vector3.Up);
@@ -98,6 +99,9 @@ namespace Project3
             base.Initialize();
         }
 
+        /// <summary>
+        /// Creates the bonding box and two paddles
+        /// </summary>
         public void CreateCubes()
         {
             //sets info for the stencil of the bounding box
@@ -153,6 +157,7 @@ namespace Project3
                 Exit();
 
             Vector3 p = Vector3.Zero;
+            float deltaX = 0, deltaY = 0;
             //checks if the ball intersects with the bound box and inverts the apporiate velocity
             for (int i = 0; i < sphereData.Length; i++)
             {
@@ -162,6 +167,24 @@ namespace Project3
 
                 //creates the bounding sphere around the ball
                 ballBoundingSphere = new BoundingSphere(sphereData[i].position, 1f);
+                playerPaddle1 = new BoundingBox(new Vector3(-cubeData[1].xScale + cubeData[1].position.X, -cubeData[1].yScale + cubeData[1].position.Y, -cubeData[1].zScale + cubeData[1].position.Z), new Vector3(cubeData[1].xScale + cubeData[1].position.X, cubeData[1].yScale + cubeData[1].position.Y, cubeData[1].zScale + cubeData[1].position.Z));
+                
+                if(ballBoundingSphere.Intersects(playerPaddle1))
+                {
+                    deltaX = sphereData[i].position.X - cubeData[1].position.X;
+                    deltaY = sphereData[i].position.Y - cubeData[1].position.Y;
+
+                    sphereData[i].velocity.Normalize();
+
+                    sphereData[i].velocity.X += deltaX;
+                    sphereData[i].velocity.Y += deltaY;
+
+                    sphereData[i].velocity.Normalize();
+
+                    sphereData[i].velocity *= ballSpeed;
+
+                    Console.WriteLine(sphereData[i].velocity);
+                }
 
                 //checks if the ball insterected with the bounding box
                 if (ballBoundingSphere.Intersects(fieldBoundingBox))
@@ -177,6 +200,47 @@ namespace Project3
 
             #region Rotation and Translations of View
 
+            //paddle1 movement
+            if (state.IsKeyDown(Keys.Left) && state.IsKeyDown(Keys.Up) && playerPaddle1.Intersects(new Plane(new Vector3(0, 1, 0), 10)) != PlaneIntersectionType.Intersecting)
+            {
+                cubeData[1].position.Y += paddleSpeed1 * (float)(Math.Sqrt(2) / 2) * gameTime.ElapsedGameTime.Milliseconds / 1000f;
+                cubeData[1].position.X -= paddleSpeed1 * (float)(Math.Sqrt(2) / 2) * gameTime.ElapsedGameTime.Milliseconds / 1000f;
+            }
+
+            if (state.IsKeyDown(Keys.Right) && state.IsKeyDown(Keys.Up))
+            {
+                cubeData[1].position.Y += paddleSpeed1 * (float)(Math.Sqrt(2) / 2) * gameTime.ElapsedGameTime.Milliseconds / 1000f;
+                cubeData[1].position.X += paddleSpeed1 * (float)(Math.Sqrt(2) / 2) * gameTime.ElapsedGameTime.Milliseconds / 1000f;
+            }
+            else if (state.IsKeyDown(Keys.Up))
+            {
+                cubeData[1].position.Y += paddleSpeed1 * gameTime.ElapsedGameTime.Milliseconds / 1000f;
+            }
+
+            if (state.IsKeyDown(Keys.Left) && state.IsKeyDown(Keys.Down))
+            {
+                cubeData[1].position.Y -= paddleSpeed1 * (float)(Math.Sqrt(2) / 2) * gameTime.ElapsedGameTime.Milliseconds / 1000f;
+                cubeData[1].position.X -= paddleSpeed1 * (float)(Math.Sqrt(2) / 2) * gameTime.ElapsedGameTime.Milliseconds / 1000f;
+            }
+            else if (state.IsKeyDown(Keys.Right) && state.IsKeyDown(Keys.Down))
+            {
+                cubeData[1].position.Y -= paddleSpeed1 * (float)(Math.Sqrt(2) / 2) * gameTime.ElapsedGameTime.Milliseconds / 1000f;
+                cubeData[1].position.X += paddleSpeed1 * (float)(Math.Sqrt(2) / 2) * gameTime.ElapsedGameTime.Milliseconds / 1000f;
+            }
+            else if (state.IsKeyDown(Keys.Down))
+            {
+                    cubeData[1].position.Y -= paddleSpeed1 * gameTime.ElapsedGameTime.Milliseconds / 1000f;
+            }
+
+            if (state.IsKeyDown(Keys.Left))
+            {
+                cubeData[1].position.X -= paddleSpeed1 * gameTime.ElapsedGameTime.Milliseconds / 1000f;
+            }
+
+            if (state.IsKeyDown(Keys.Right))
+            {
+                cubeData[1].position.X += paddleSpeed1 * gameTime.ElapsedGameTime.Milliseconds / 1000f;
+            }
 
             //rotation = Matrix.CreateFromYawPitchRoll(yaw, pitch, 0f);
 
