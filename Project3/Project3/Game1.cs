@@ -33,6 +33,8 @@ namespace Project3
     {
         #region Fields
         //fields
+        TextureCube skyboxTexture;
+        Texture2D paddles;
         GraphicsDeviceManager graphics;
         SpriteBatch spriteBatch;
         Cube cube;
@@ -43,6 +45,7 @@ namespace Project3
         BasicEffect effect;
         BasicEffect ballEffect;
         BasicEffect paddleEffect;
+        Effect skyboxEffect;
         BoundingBox fieldBoundingBox;
         BoundingBox playerPaddle1;
         BoundingBox playerPaddle2;
@@ -114,15 +117,20 @@ namespace Project3
             cubeData[1].xScale = 1;
             cubeData[1].yScale = 1;
             cubeData[1].zScale = 0.2f;
-            cubeData[1].position = new Vector3(0, 0, 20f);
+            cubeData[1].position = new Vector3(0, 0, 19.75f);
             cubeData[1].color = new Color(NextFloat(0.5f, 1), 0, NextFloat(0.5f, 1));
 
             //paddles info player 2
             cubeData[2].xScale = 1;
             cubeData[2].yScale = 1;
             cubeData[2].zScale = 0.2f;
-            cubeData[2].position = new Vector3(0, 0, -20f);
+            cubeData[2].position = new Vector3(0, 0, -19.75f);
             cubeData[2].color = new Color(NextFloat(0.5f, 1), NextFloat(0.5f, 1), 0);
+
+            //skybox
+            cubeData[3].scale = 100;
+            cubeData[3].position = new Vector3(0, 0, 0);
+
         }
 
         /// <summary>
@@ -134,7 +142,9 @@ namespace Project3
             // Create a new SpriteBatch, which can be used to draw textures.
             spriteBatch = new SpriteBatch(GraphicsDevice);
 
-            // TODO: use this.Content to load your game content here
+            skyboxTexture = Content.Load<TextureCube>("Skybox/rickandmorty");
+            paddles = Content.Load<Texture2D>("Paddles/rick");
+            skyboxEffect = Content.Load<Effect>("Skybox/skybox");
         }
 
         /// <summary>
@@ -161,15 +171,11 @@ namespace Project3
             //checks if the ball intersects with the bound box and inverts the apporiate velocity
             for (int i = 0; i < sphereData.Length; i++)
             {
-
-                UpdateBall(sphereData[i], gameTime.ElapsedGameTime.Milliseconds / 1000f, out p);
-                sphereData[i].position = p;
-
                 //creates the bounding sphere around the ball
                 ballBoundingSphere = new BoundingSphere(sphereData[i].position, 1f);
                 playerPaddle1 = new BoundingBox(new Vector3(-cubeData[1].xScale + cubeData[1].position.X, -cubeData[1].yScale + cubeData[1].position.Y, -cubeData[1].zScale + cubeData[1].position.Z), new Vector3(cubeData[1].xScale + cubeData[1].position.X, cubeData[1].yScale + cubeData[1].position.Y, cubeData[1].zScale + cubeData[1].position.Z));
 
-                if (ballBoundingSphere.Intersects(playerPaddle1))
+                if (ballBoundingSphere.Intersects(playerPaddle1) || BallHitPaddle(sphereData[i], cubeData[1]))
                 {
                     deltaX = sphereData[i].position.X - cubeData[1].position.X;
                     deltaY = sphereData[i].position.Y - cubeData[1].position.Y;
@@ -194,6 +200,9 @@ namespace Project3
                     if (sphereData[i].position.Y >= cubeData[0].yScale || sphereData[i].position.Y <= -cubeData[0].yScale) sphereData[i].velocity *= new Vector3(1f, -1f, 1f);
                     if (sphereData[i].position.Z >= cubeData[0].zScale || sphereData[i].position.Z <= -cubeData[0].zScale) sphereData[i].velocity *= new Vector3(1f, 1f, -1f);
                 }
+
+                UpdateBall(sphereData[i], gameTime.ElapsedGameTime.Milliseconds / 1000f, out p);
+                sphereData[i].position = p;
             }
 
             //gets the state of the keyboards
@@ -201,44 +210,44 @@ namespace Project3
 
             #region Rotation and Translations of View
 
-            //paddle1 movement
-            if (state.IsKeyDown(Keys.Left) && state.IsKeyDown(Keys.Up))
+            //paddle1 movement keeps paddle in bounding box
+            if (state.IsKeyDown(Keys.Left) && state.IsKeyDown(Keys.Up) && cubeData[1].position.Y + cubeData[1].yScale < cubeData[0].position.Y + cubeData[0].yScale && cubeData[1].position.X - cubeData[1].xScale > cubeData[0].position.X - cubeData[0].xScale)
             {
                 cubeData[1].position.Y += paddleSpeed1 * (float)(Math.Sqrt(2) / 2) * gameTime.ElapsedGameTime.Milliseconds / 1000f;
                 cubeData[1].position.X -= paddleSpeed1 * (float)(Math.Sqrt(2) / 2) * gameTime.ElapsedGameTime.Milliseconds / 1000f;
             }
 
-            if (state.IsKeyDown(Keys.Right) && state.IsKeyDown(Keys.Up))
+            if (state.IsKeyDown(Keys.Right) && state.IsKeyDown(Keys.Up) && cubeData[1].position.Y + cubeData[1].yScale < cubeData[0].position.Y + cubeData[0].yScale && cubeData[1].position.X + cubeData[1].xScale < cubeData[0].position.X + cubeData[0].xScale)
             {
                 cubeData[1].position.Y += paddleSpeed1 * (float)(Math.Sqrt(2) / 2) * gameTime.ElapsedGameTime.Milliseconds / 1000f;
                 cubeData[1].position.X += paddleSpeed1 * (float)(Math.Sqrt(2) / 2) * gameTime.ElapsedGameTime.Milliseconds / 1000f;
             }
-            else if (state.IsKeyDown(Keys.Up))
+            else if (state.IsKeyDown(Keys.Up) && cubeData[1].position.Y + cubeData[1].yScale < cubeData[0].position.Y + cubeData[0].yScale)
             {
                 cubeData[1].position.Y += paddleSpeed1 * gameTime.ElapsedGameTime.Milliseconds / 1000f;
             }
 
-            if (state.IsKeyDown(Keys.Left) && state.IsKeyDown(Keys.Down))
+            if (state.IsKeyDown(Keys.Left) && state.IsKeyDown(Keys.Down) && cubeData[1].position.Y - cubeData[1].yScale > cubeData[0].position.Y - cubeData[0].yScale && cubeData[1].position.X - cubeData[1].xScale > cubeData[0].position.X - cubeData[0].xScale)
             {
                 cubeData[1].position.Y -= paddleSpeed1 * (float)(Math.Sqrt(2) / 2) * gameTime.ElapsedGameTime.Milliseconds / 1000f;
                 cubeData[1].position.X -= paddleSpeed1 * (float)(Math.Sqrt(2) / 2) * gameTime.ElapsedGameTime.Milliseconds / 1000f;
             }
-            else if (state.IsKeyDown(Keys.Right) && state.IsKeyDown(Keys.Down))
+            else if (state.IsKeyDown(Keys.Right) && state.IsKeyDown(Keys.Down) && cubeData[1].position.Y - cubeData[1].yScale > cubeData[0].position.Y - cubeData[0].yScale && cubeData[1].position.X + cubeData[1].xScale < cubeData[0].position.X + cubeData[0].xScale)
             {
                 cubeData[1].position.Y -= paddleSpeed1 * (float)(Math.Sqrt(2) / 2) * gameTime.ElapsedGameTime.Milliseconds / 1000f;
                 cubeData[1].position.X += paddleSpeed1 * (float)(Math.Sqrt(2) / 2) * gameTime.ElapsedGameTime.Milliseconds / 1000f;
             }
-            else if (state.IsKeyDown(Keys.Down))
+            else if (state.IsKeyDown(Keys.Down) && cubeData[1].position.Y - cubeData[1].yScale > cubeData[0].position.Y - cubeData[0].yScale)
             {
-                    cubeData[1].position.Y -= paddleSpeed1 * gameTime.ElapsedGameTime.Milliseconds / 1000f;
+                cubeData[1].position.Y -= paddleSpeed1 * gameTime.ElapsedGameTime.Milliseconds / 1000f;
             }
 
-            if (state.IsKeyDown(Keys.Left))
+            if (state.IsKeyDown(Keys.Left) && cubeData[1].position.X - cubeData[1].xScale > cubeData[0].position.X - cubeData[0].xScale)
             {
                 cubeData[1].position.X -= paddleSpeed1 * gameTime.ElapsedGameTime.Milliseconds / 1000f;
             }
 
-            if (state.IsKeyDown(Keys.Right))
+            if (state.IsKeyDown(Keys.Right) && cubeData[1].position.X + cubeData[1].xScale < cubeData[0].position.X + cubeData[0].xScale)
             {
                 cubeData[1].position.X += paddleSpeed1 * gameTime.ElapsedGameTime.Milliseconds / 1000f;
             }
@@ -284,6 +293,54 @@ namespace Project3
 
             effect.VertexColorEnabled = true;
 
+            RasterizerState orginal = GraphicsDevice.RasterizerState;
+            GraphicsDevice.RasterizerState = RasterizerState.CullNone;
+
+            //renders skycube
+            foreach (EffectTechnique technique in skyboxEffect.Techniques)
+            {
+                foreach (EffectPass pass in technique.Passes)
+                {
+                    pass.Apply();
+
+                    skyboxEffect.Parameters["World"].SetValue(world * Matrix.CreateScale(cubeData[3].scale) * Matrix.CreateTranslation(cubeData[3].position));
+                    skyboxEffect.Parameters["View"].SetValue(view);
+                    skyboxEffect.Parameters["Projection"].SetValue(projection);
+                    skyboxEffect.Parameters["SkyBoxTexture"].SetValue(skyboxTexture);
+                    skyboxEffect.Parameters["CameraPosition"].SetValue(cameraPosition);
+
+                    cube.Render(GraphicsDevice);//renders the skycube
+                }
+            }
+
+
+            foreach (EffectPass pass in paddleEffect.CurrentTechnique.Passes)
+            {
+                pass.Apply();
+
+                paddleEffect.World = world * Matrix.CreateScale(cubeData[1].xScale, cubeData[1].yScale, cubeData[1].zScale) * Matrix.CreateTranslation(cubeData[1].position);
+                paddleEffect.View = view;
+                paddleEffect.Projection = projection;
+                paddleEffect.Texture = paddles;
+                paddleEffect.TextureEnabled = true;
+
+                cube.Render(GraphicsDevice);//renders the skycube
+            }
+
+            foreach (EffectPass pass in paddleEffect.CurrentTechnique.Passes)
+            {
+                pass.Apply();
+
+                paddleEffect.World = world * Matrix.CreateScale(cubeData[2].xScale, cubeData[2].yScale, cubeData[2].zScale) * Matrix.CreateTranslation(cubeData[2].position);
+                paddleEffect.View = view;
+                paddleEffect.Projection = projection;
+                paddleEffect.Texture = paddles;
+                paddleEffect.TextureEnabled = true;
+
+                cube.Render(GraphicsDevice);//renders the skycube
+            }
+
+            GraphicsDevice.RasterizerState = orginal;
             //renders bounding box
             foreach (EffectPass pass in effect.CurrentTechnique.Passes)
             {
@@ -297,42 +354,6 @@ namespace Project3
             }
 
             Vector3 lightDirection = new Vector3(1f, 1f, -1f);
-
-            foreach (EffectPass pass in paddleEffect.CurrentTechnique.Passes)
-            {
-                pass.Apply();
-
-                paddleEffect.World = world * Matrix.CreateScale(cubeData[1].xScale, cubeData[1].yScale, cubeData[1].zScale) * Matrix.CreateTranslation(cubeData[1].position);
-                paddleEffect.View = view;
-                paddleEffect.Projection = projection;
-
-                paddleEffect.LightingEnabled = true;
-                paddleEffect.DirectionalLight0.DiffuseColor = cubeData[1].color.ToVector3();
-                paddleEffect.DirectionalLight0.Direction = lightDirection;
-                paddleEffect.DirectionalLight0.SpecularColor = Vector3.One;
-
-                paddleEffect.AmbientLightColor = cubeData[1].color.ToVector3();
-
-                cube.Render(GraphicsDevice);
-            }
-
-            foreach (EffectPass pass in paddleEffect.CurrentTechnique.Passes)
-            {
-                pass.Apply();
-
-                paddleEffect.World = world * Matrix.CreateScale(cubeData[2].xScale, cubeData[2].yScale, cubeData[2].zScale) * Matrix.CreateTranslation(cubeData[2].position);
-                paddleEffect.View = view;
-                paddleEffect.Projection = projection;
-
-                paddleEffect.LightingEnabled = true;
-                paddleEffect.DirectionalLight0.DiffuseColor = cubeData[2].color.ToVector3();
-                paddleEffect.DirectionalLight0.Direction = lightDirection;
-                paddleEffect.DirectionalLight0.SpecularColor = Vector3.One;
-
-                paddleEffect.AmbientLightColor = cubeData[2].color.ToVector3();
-
-                cube.Render(GraphicsDevice);
-            }
 
             //renders the ball
             foreach (EffectPass pass in ballEffect.CurrentTechnique.Passes)
@@ -377,6 +398,11 @@ namespace Project3
         private void UpdateBall(SphereData ball, float time, out Vector3 position)
         {
             position = ball.position + ball.velocity * time;
+        }
+
+        private bool BallHitPaddle(SphereData ball, CubeData paddle)
+        {
+            return ((ball.position.Z + 1 >= paddle.position.Z - paddle.zScale && ball.position.X >= paddle.position.X - paddle.xScale && ball.position.X <= paddle.position.X + paddle.xScale && ball.position.Y >= paddle.position.Y - paddle.yScale && ball.position.Y <= paddle.position.Y + paddle.yScale));
         }
     }
 }
