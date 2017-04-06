@@ -46,6 +46,7 @@ namespace Project3
         BasicEffect effect;
         BasicEffect ballEffect;
         BasicEffect paddleEffect;
+        BasicEffect indicaterEffect;
         Effect skyboxEffect;
         BoundingBox fieldBoundingBox;
         BoundingBox playerPaddle1;
@@ -79,10 +80,12 @@ namespace Project3
             sphere = new SpherePrimitive(GraphicsDevice, 1f, 20);
             effect = new BasicEffect(GraphicsDevice);
             ballEffect = new BasicEffect(GraphicsDevice);
+            indicaterEffect = new BasicEffect(GraphicsDevice);
             paddleEffect = new BasicEffect(GraphicsDevice);
+            
             field = new LineCube();
 
-            cubeData = new CubeData[4];
+            cubeData = new CubeData[5];
             sphereData = new SphereData[1];
 
             //creats cube objects
@@ -132,6 +135,13 @@ namespace Project3
             //skybox
             cubeData[3].scale = 200;
             cubeData[3].position = new Vector3(0, 0, 0);
+
+            //indication
+            cubeData[4].xScale = 1;
+            cubeData[4].yScale = 1;
+            cubeData[4].zScale = 0.1f;
+            cubeData[4].position = new Vector3(0, 0, -19.8f);
+            cubeData[4].color = new Color(0, NextFloat(0.5f, 1), 0, 0.0f);
 
         }
 
@@ -200,6 +210,20 @@ namespace Project3
                     }
 
                     Console.WriteLine(sphereData[i].velocity);
+                }
+
+                //indicater update
+                if (sphereData[i].position.Z >= 7  && sphereData[i].velocity.Z > 0)
+                {
+                    cubeData[4].position.X = sphereData[i].position.X;
+                    cubeData[4].position.Y = sphereData[i].position.Y;
+                    cubeData[4].position.Z = 20;
+                }
+                else if (sphereData[i].position.Z <= -7 && sphereData[i].velocity.Z < 0)
+                {
+                    cubeData[4].position.X = sphereData[i].position.X;
+                    cubeData[4].position.Y = sphereData[i].position.Y;
+                    cubeData[4].position.Z = -20;
                 }
 
                 //checks if the ball insterected with the bounding box
@@ -341,6 +365,7 @@ namespace Project3
                 }
             }
 
+            Vector3 lightDirection = new Vector3(1f, 1f, -1f);
 
             foreach (EffectPass pass in paddleEffect.CurrentTechnique.Passes)
             {
@@ -368,7 +393,26 @@ namespace Project3
                 cube.Render(GraphicsDevice);//renders paddle2
             }
 
+            foreach (EffectPass pass in indicaterEffect.CurrentTechnique.Passes)
+            {
+                pass.Apply();
+
+                indicaterEffect.World = world * Matrix.CreateScale(cubeData[4].xScale, cubeData[4].yScale, cubeData[4].zScale) * Matrix.CreateTranslation(cubeData[4].position);
+                indicaterEffect.View = view;
+                indicaterEffect.Projection = projection;
+
+                indicaterEffect.TextureEnabled = false;
+                indicaterEffect.LightingEnabled = true;
+                indicaterEffect.DirectionalLight0.DiffuseColor = cubeData[4].color.ToVector3();
+                indicaterEffect.Alpha = 0.2f;
+                indicaterEffect.DirectionalLight0.Direction = lightDirection;
+                indicaterEffect.AmbientLightColor = cubeData[4].color.ToVector3();
+
+                cube.Render(GraphicsDevice);//renders indicates
+            }
+
             GraphicsDevice.RasterizerState = orginal;
+
             //renders bounding box
             foreach (EffectPass pass in effect.CurrentTechnique.Passes)
             {
@@ -380,8 +424,6 @@ namespace Project3
 
                 field.Render(GraphicsDevice);
             }
-
-            Vector3 lightDirection = new Vector3(1f, 1f, -1f);
 
             //renders the ball
             foreach (EffectPass pass in ballEffect.CurrentTechnique.Passes)
