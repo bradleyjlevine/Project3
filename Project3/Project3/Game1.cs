@@ -128,7 +128,7 @@ namespace Project3
             cubeData[2].color = new Color(NextFloat(0.5f, 1), NextFloat(0.5f, 1), 0);
 
             //skybox
-            cubeData[3].scale = 100;
+            cubeData[3].scale = 200;
             cubeData[3].position = new Vector3(0, 0, 0);
 
         }
@@ -142,7 +142,7 @@ namespace Project3
             // Create a new SpriteBatch, which can be used to draw textures.
             spriteBatch = new SpriteBatch(GraphicsDevice);
 
-            skyboxTexture = Content.Load<TextureCube>("Skybox/rickandmorty");
+            skyboxTexture = Content.Load<TextureCube>("Skybox/space");
             paddles = Content.Load<Texture2D>("Paddles/rick");
             skyboxEffect = Content.Load<Effect>("Skybox/skybox");
         }
