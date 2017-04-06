@@ -34,6 +34,7 @@ namespace Project3
         #region Fields
         //fields
         TextureCube skyboxTexture;
+        SpriteFont text;
         Texture2D paddles;
         GraphicsDeviceManager graphics;
         SpriteBatch spriteBatch;
@@ -56,6 +57,7 @@ namespace Project3
         Matrix projection;
         Vector3 cameraPosition = new Vector3(0, 0, 50f);
         float ballSpeed = 10f, paddleSpeed1 = 10f, pitch = MathHelper.PiOver2, yaw = 0;
+        private int player1Score = 0, player2Score = 0;
         #endregion
 
         public Game1()
@@ -117,14 +119,14 @@ namespace Project3
             cubeData[1].xScale = 1;
             cubeData[1].yScale = 1;
             cubeData[1].zScale = 0.2f;
-            cubeData[1].position = new Vector3(0, 0, 19.75f);
+            cubeData[1].position = new Vector3(0, 0, 19.8f);
             cubeData[1].color = new Color(NextFloat(0.5f, 1), 0, NextFloat(0.5f, 1));
 
             //paddles info player 2
             cubeData[2].xScale = 1;
             cubeData[2].yScale = 1;
             cubeData[2].zScale = 0.2f;
-            cubeData[2].position = new Vector3(0, 0, -19.75f);
+            cubeData[2].position = new Vector3(0, 0, -19.8f);
             cubeData[2].color = new Color(NextFloat(0.5f, 1), NextFloat(0.5f, 1), 0);
 
             //skybox
@@ -142,9 +144,10 @@ namespace Project3
             // Create a new SpriteBatch, which can be used to draw textures.
             spriteBatch = new SpriteBatch(GraphicsDevice);
 
-            skyboxTexture = Content.Load<TextureCube>("Skybox/space");
+            skyboxTexture = Content.Load<TextureCube>("Skybox/SkyBoxTexture");
             paddles = Content.Load<Texture2D>("Paddles/rick");
             skyboxEffect = Content.Load<Effect>("Skybox/skybox");
+            text = Content.Load<SpriteFont>("text");
         }
 
         /// <summary>
@@ -166,6 +169,7 @@ namespace Project3
             if (GamePad.GetState(PlayerIndex.One).Buttons.Back == ButtonState.Pressed || Keyboard.GetState().IsKeyDown(Keys.Escape))
                 Exit();
 
+            #region Checking if Ball hit something
             Vector3 p = Vector3.Zero;
             float deltaX = 0, deltaY = 0;
             //checks if the ball intersects with the bound box and inverts the apporiate velocity
@@ -175,20 +179,25 @@ namespace Project3
                 ballBoundingSphere = new BoundingSphere(sphereData[i].position, 1f);
                 playerPaddle1 = new BoundingBox(new Vector3(-cubeData[1].xScale + cubeData[1].position.X, -cubeData[1].yScale + cubeData[1].position.Y, -cubeData[1].zScale + cubeData[1].position.Z), new Vector3(cubeData[1].xScale + cubeData[1].position.X, cubeData[1].yScale + cubeData[1].position.Y, cubeData[1].zScale + cubeData[1].position.Z));
 
-                if (ballBoundingSphere.Intersects(playerPaddle1) || BallHitPaddle(sphereData[i], cubeData[1]))
+                if (BallHitPaddle(sphereData[i], cubeData[1]))
                 {
-                    deltaX = sphereData[i].position.X - cubeData[1].position.X;
-                    deltaY = sphereData[i].position.Y - cubeData[1].position.Y;
+                    if (cubeData[1].position.X == sphereData[i].position.X && cubeData[1].position.Y == sphereData[i].position.Y)
+                        sphereData[i].velocity *= new Vector3(1f, 1f, -1f);
+                    else
+                    {
+                        deltaX = sphereData[i].position.X - cubeData[1].position.X;
+                        deltaY = sphereData[i].position.Y - cubeData[1].position.Y;
 
-                    sphereData[i].velocity.Normalize();
+                        sphereData[i].velocity.Normalize();
 
-                    sphereData[i].velocity.X += deltaX;
-                    sphereData[i].velocity.Y += deltaY;
+                        sphereData[i].velocity.X += deltaX;
+                        sphereData[i].velocity.Y += deltaY;
 
-                    sphereData[i].velocity.Normalize();
+                        sphereData[i].velocity.Normalize();
 
-                    sphereData[i].velocity *= ballSpeed;
-                    sphereData[i].velocity.Z = ballSpeed;
+                        sphereData[i].velocity *= ballSpeed;
+                        sphereData[i].velocity.Z = -ballSpeed;
+                    }
 
                     Console.WriteLine(sphereData[i].velocity);
                 }
@@ -198,17 +207,32 @@ namespace Project3
                 {
                     if (sphereData[i].position.X >= cubeData[0].xScale || sphereData[i].position.X <= -cubeData[0].xScale) sphereData[i].velocity *= new Vector3(-1f, 1f, 1f);
                     if (sphereData[i].position.Y >= cubeData[0].yScale || sphereData[i].position.Y <= -cubeData[0].yScale) sphereData[i].velocity *= new Vector3(1f, -1f, 1f);
-                    if (sphereData[i].position.Z >= cubeData[0].zScale || sphereData[i].position.Z <= -cubeData[0].zScale) sphereData[i].velocity *= new Vector3(1f, 1f, -1f);
+
+                    if (sphereData[i].position.Z >= cubeData[0].zScale)
+                    {
+                        player2Score++;
+                        sphereData[i].position = Vector3.Zero;
+                        sphereData[i].velocity = new Vector3(0f, 0f, ballSpeed);
+                    }
+                    else if(sphereData[i].position.Z <= -cubeData[0].zScale)
+                    {
+                        player1Score++;
+                        sphereData[i].position = Vector3.Zero;
+                        sphereData[i].velocity = new Vector3(0f, 0f, -ballSpeed);
+
+                    }
                 }
 
                 UpdateBall(sphereData[i], gameTime.ElapsedGameTime.Milliseconds / 1000f, out p);
                 sphereData[i].position = p;
             }
 
+            #endregion
+
             //gets the state of the keyboards
             KeyboardState state = Keyboard.GetState();
 
-            #region Rotation and Translations of View
+            #region Paddle1 Movement
 
             //paddle1 movement keeps paddle in bounding box
             if (state.IsKeyDown(Keys.Left) && state.IsKeyDown(Keys.Up) && cubeData[1].position.Y + cubeData[1].yScale < cubeData[0].position.Y + cubeData[0].yScale && cubeData[1].position.X - cubeData[1].xScale > cubeData[0].position.X - cubeData[0].xScale)
@@ -289,13 +313,17 @@ namespace Project3
         /// <param name="gameTime">Provides a snapshot of timing values.</param>
         protected override void Draw(GameTime gameTime)
         {
+            Color textColor = Color.DarkViolet;
+            textColor.A = 128;
+
             GraphicsDevice.Clear(Color.Black);
 
             effect.VertexColorEnabled = true;
 
             RasterizerState orginal = GraphicsDevice.RasterizerState;
-            GraphicsDevice.RasterizerState = RasterizerState.CullNone;
+            GraphicsDevice.RasterizerState = RasterizerState.CullClockwise;
 
+            #region Renders Objects
             //renders skycube
             foreach (EffectTechnique technique in skyboxEffect.Techniques)
             {
@@ -324,7 +352,7 @@ namespace Project3
                 paddleEffect.Texture = paddles;
                 paddleEffect.TextureEnabled = true;
 
-                cube.Render(GraphicsDevice);//renders the skycube
+                cube.Render(GraphicsDevice);//renders paddle 1
             }
 
             foreach (EffectPass pass in paddleEffect.CurrentTechnique.Passes)
@@ -337,7 +365,7 @@ namespace Project3
                 paddleEffect.Texture = paddles;
                 paddleEffect.TextureEnabled = true;
 
-                cube.Render(GraphicsDevice);//renders the skycube
+                cube.Render(GraphicsDevice);//renders paddle2
             }
 
             GraphicsDevice.RasterizerState = orginal;
@@ -374,6 +402,15 @@ namespace Project3
                 sphere.Draw(ballEffect);
             }
 
+            #endregion
+
+            spriteBatch.Begin();
+
+            spriteBatch.DrawString(text, String.Format("Human Score: {0}", player1Score), new Vector2(0, 0), textColor);
+            spriteBatch.DrawString(text, String.Format("Computer Score: {0}", player2Score), new Vector2(590, 0), textColor);
+
+            spriteBatch.End();
+
 
             base.Draw(gameTime);
         }
@@ -400,6 +437,12 @@ namespace Project3
             position = ball.position + ball.velocity * time;
         }
 
+        /// <summary>
+        /// Checks if the ball is hitting the paddles surface
+        /// </summary>
+        /// <param name="ball">Ball to check against paddle</param>
+        /// <param name="paddle">Paddle you are checking</param>
+        /// <returns></returns>
         private bool BallHitPaddle(SphereData ball, CubeData paddle)
         {
             return ((ball.position.Z + 1 >= paddle.position.Z - paddle.zScale && ball.position.X >= paddle.position.X - paddle.xScale && ball.position.X <= paddle.position.X + paddle.xScale && ball.position.Y >= paddle.position.Y - paddle.yScale && ball.position.Y <= paddle.position.Y + paddle.yScale));

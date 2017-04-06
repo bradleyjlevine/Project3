@@ -19,18 +19,6 @@
 /processorParam:DebugMode=Auto
 /build:Skybox/skybox.fx
 
-#begin Skybox/rickandmorty.dds
-/importer:TextureImporter
-/processor:TextureProcessor
-/processorParam:ColorKeyColor=255,0,255,255
-/processorParam:ColorKeyEnabled=True
-/processorParam:GenerateMipmaps=False
-/processorParam:PremultiplyAlpha=True
-/processorParam:ResizeToPowerOfTwo=False
-/processorParam:MakeSquare=False
-/processorParam:TextureFormat=Color
-/build:Skybox/rickandmorty.dds
-
 #begin Paddles/rick.jpg
 /importer:TextureImporter
 /processor:TextureProcessor
@@ -49,15 +37,21 @@
 /processorParam:DebugMode=Auto
 /build:Paddles/paddle.fx
 
-#begin Skybox/space.dds
+#begin Text.spritefont
+/importer:FontDescriptionImporter
+/processor:FontDescriptionProcessor
+/processorParam:TextureFormat=Compressed
+/build:Text.spritefont
+
+#begin Skybox/SkyBoxTexture.dds
 /importer:TextureImporter
 /processor:TextureProcessor
 /processorParam:ColorKeyColor=255,0,255,255
 /processorParam:ColorKeyEnabled=True
 /processorParam:GenerateMipmaps=False
-/processorParam:PremultiplyAlpha=True
+/processorParam:PremultiplyAlpha=False
 /processorParam:ResizeToPowerOfTwo=False
 /processorParam:MakeSquare=False
-/processorParam:TextureFormat=Color
-/build:Skybox/space.dds
+/processorParam:TextureFormat=Compressed
+/build:Skybox/SkyBoxTexture.dds
 
