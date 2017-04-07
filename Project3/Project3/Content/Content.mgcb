@@ -55,3 +55,21 @@
 /processorParam:TextureFormat=Compressed
 /build:Skybox/SkyBoxTexture.dds
 
+#begin Sounds/Rick.mp3
+/importer:Mp3Importer
+/processor:SoundEffectProcessor
+/processorParam:Quality=Best
+/build:Sounds/Rick.mp3
+
+#begin Sounds/Rekt.mp3
+/importer:Mp3Importer
+/processor:SoundEffectProcessor
+/processorParam:Quality=Best
+/build:Sounds/Rekt.mp3
+
+#begin theme.mp3
+/importer:Mp3Importer
+/processor:SongProcessor
+/processorParam:Quality=Best
+/build:theme.mp3
+

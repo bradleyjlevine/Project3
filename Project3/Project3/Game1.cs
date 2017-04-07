@@ -3,7 +3,8 @@ using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using System;
 using Primitives;
-
+using Microsoft.Xna.Framework.Audio;
+using Microsoft.Xna.Framework.Media;
 
 namespace Project3
 {
@@ -52,6 +53,10 @@ namespace Project3
         BoundingBox playerPaddle1;
         BoundingBox playerPaddle2;
         BoundingSphere ballBoundingSphere;
+        SoundEffect wubba;
+        SoundEffect rekt;
+        Song background;
+        
 
         Matrix world;
         Matrix view;
@@ -158,6 +163,12 @@ namespace Project3
             paddles = Content.Load<Texture2D>("Paddles/rick");
             skyboxEffect = Content.Load<Effect>("Skybox/skybox");
             text = Content.Load<SpriteFont>("text");
+            wubba = Content.Load<SoundEffect>("Sounds/Rick");
+            rekt = Content.Load<SoundEffect>("Sounds/Rekt");
+            background = Content.Load<Song>("theme");
+            MediaPlayer.Volume = 0.25f;
+            MediaPlayer.Play(background);
+            MediaPlayer.IsRepeating = true;
         }
 
         /// <summary>
@@ -191,6 +202,8 @@ namespace Project3
 
                 if (BallHitPaddle(sphereData[i], cubeData[1]))
                 {
+                    wubba.Play();
+
                     if (cubeData[1].position.X == sphereData[i].position.X && cubeData[1].position.Y == sphereData[i].position.Y)
                         sphereData[i].velocity *= new Vector3(1f, 1f, -1f);
                     else
@@ -212,8 +225,33 @@ namespace Project3
                     Console.WriteLine(sphereData[i].velocity);
                 }
 
+                if (BallHitPaddle2(sphereData[i], cubeData[2]))
+                {
+                    rekt.Play();
+
+                    if (cubeData[2].position.X == sphereData[i].position.X && cubeData[2].position.Y == sphereData[i].position.Y)
+                        sphereData[i].velocity *= new Vector3(1f, 1f, -1f);
+                    else
+                    {
+                        deltaX = sphereData[i].position.X - cubeData[2].position.X;
+                        deltaY = sphereData[i].position.Y - cubeData[2].position.Y;
+
+                        sphereData[i].velocity.Normalize();
+
+                        sphereData[i].velocity.X += deltaX;
+                        sphereData[i].velocity.Y += deltaY;
+
+                        sphereData[i].velocity.Normalize();
+
+                        sphereData[i].velocity *= ballSpeed;
+                        sphereData[i].velocity.Z = -ballSpeed;
+                    }
+
+                    Console.WriteLine(sphereData[i].velocity + "Paddle#2");
+                }
+
                 //indicater update
-                if (sphereData[i].position.Z >= 7  && sphereData[i].velocity.Z > 0)
+                if (sphereData[i].position.Z >= 7 && sphereData[i].velocity.Z > 0)
                 {
                     cubeData[4].position.X = sphereData[i].position.X;
                     cubeData[4].position.Y = sphereData[i].position.Y;
@@ -237,12 +275,14 @@ namespace Project3
                         player2Score++;
                         sphereData[i].position = Vector3.Zero;
                         sphereData[i].velocity = new Vector3(0f, 0f, ballSpeed);
+                        cubeData[1].position = new Vector3(0, 0, 19.8f);
                     }
-                    else if(sphereData[i].position.Z <= -cubeData[0].zScale)
+                    else if (sphereData[i].position.Z <= -cubeData[0].zScale)
                     {
                         player1Score++;
                         sphereData[i].position = Vector3.Zero;
                         sphereData[i].velocity = new Vector3(0f, 0f, -ballSpeed);
+                        cubeData[2].position = new Vector3(0, 0, -19.8f);
 
                     }
                 }
@@ -325,6 +365,39 @@ namespace Project3
             cameraPosition = new Vector3((float)Math.Cos(pitch) * 30, (float)Math.Sin(yaw) * 30, 50);
 
             view = Matrix.CreateLookAt(cameraPosition, Vector3.Zero, Vector3.Up);
+
+            #endregion
+
+            #region Paddle2 Movement
+            if (sphereData[0].position.Z < 0)
+            { 
+            
+                float paddle2X;
+                float paddle2Y;
+                
+                paddle2X = cubeData[2].position.X - sphereData[0].position.X;
+                paddle2Y = cubeData[2].position.Y - sphereData[0].position.Y;
+                Vector3 Velocity = new Vector3(paddle2X, paddle2Y, 0);
+                Velocity.Normalize();
+                //5Velocity *= -1; 
+
+                cubeData[2].position += (new Vector3(paddle2X, paddle2Y, 0)) * 0.5f * gameTime.ElapsedGameTime.Milliseconds / 1000f;
+            }
+
+            else if(sphereData[0].position.Z > 0)
+            {
+                float paddle2X;
+                float paddle2Y;
+
+                paddle2X = 0 - cubeData[2].position.X;
+                paddle2Y = 0 - cubeData[2].position.Y;
+
+                Vector3 Velocity = new Vector3(paddle2X, paddle2Y, 0);
+                Velocity.Normalize();
+
+                if (cubeData[2].position.X != 0 && cubeData[2].position.Y != 0)
+                    cubeData[2].position += (new Vector3(paddle2X, paddle2Y, 0)) * 8f * gameTime.ElapsedGameTime.Milliseconds / 1000f;
+            }
 
             #endregion
 
@@ -488,6 +561,11 @@ namespace Project3
         private bool BallHitPaddle(SphereData ball, CubeData paddle)
         {
             return ((ball.position.Z + 1 >= paddle.position.Z - paddle.zScale && ball.position.X >= paddle.position.X - paddle.xScale && ball.position.X <= paddle.position.X + paddle.xScale && ball.position.Y >= paddle.position.Y - paddle.yScale && ball.position.Y <= paddle.position.Y + paddle.yScale));
+        }
+
+        private bool BallHitPaddle2(SphereData ball, CubeData paddle)
+        {
+            return ((ball.position.Z - 1 <= paddle.position.Z + paddle.zScale && ball.position.X >= paddle.position.X - paddle.xScale && ball.position.X <= paddle.position.X + paddle.xScale && ball.position.Y >= paddle.position.Y - paddle.yScale && ball.position.Y <= paddle.position.Y + paddle.yScale));
         }
     }
 }
